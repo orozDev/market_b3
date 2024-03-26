@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}| List Products{% endblock title %}
+
+{% block content %}
+    <h1 class="mb-4">List Products</h1>
+    <div class="row">
+        {% for item in products %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <div id="product_swiper_{{ item.id }}" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">  {% for image in item.images.all %}
+                                    <div class="carousel-item {% if item.image == image.image %}active{% endif %}">
+                                        <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ item.name }}">
+                                    </div>
+                                {% endfor %}
+                                </div>
+                                <button class="carousel-control-prev" type="button"
+                                        data-bs-target="#product_swiper_{{ item.id }}" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button"
+                                        data-bs-target="#product_swiper_{{ item.id }}" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+                        </div>
+                        <h5 class="card-title">{{ item.name }}</h5>
+                        <h6>{{ item.category.name }}</h6>
+                        <h6>
+                            {% for tag in item.tags.all %}
+                                <span>{{ tag.name }} /</span>
+                            {% endfor %}
+                        </h6>
+                        <p class="card-text">{{ item.description }}</p>
+                        <p class="card-text">{{ item.user.get_full_name }}</p>
+                        <a href="{% url 'detail_product' id=item.id %}" class="btn btn-primary">View</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% include 'components/products_paginations.html' %}
+
+    </div>
+{% endblock content %}
