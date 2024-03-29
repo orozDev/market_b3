@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}| Create new product{% endblock %}
+
+{% block content %}
+
+    <h2 class="mb-4">Create new product</h2>
+
+    <form action="{% url 'create_product' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ product_form.as_p }}
+        <div class="my-4">
+            {{ product_image_form.management_form }}
+            <h4>Images</h4>
+            <div id="imageContainer">
+                {% for form in product_image_form %}
+                    <fieldset class="product_image_form card mb-3">
+                        <div class="card-body">
+                            <div class="text-end mb-2">
+                                <button class="btn btn-danger"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            {{ form.as_p }}
+                        </div>
+                    </fieldset>
+                {% endfor %}
+            </div>
+
+            <div>
+                <button type="button" class="btn btn-primary d-block w-100" id="addImageBtn">Add Image <i
+                        class="fa-solid fa-circle-plus"></i></button>
+            </div>
+        </div>
+        <div class="mb-4">
+            {{ product_attribute_form.management_form }}
+            <h4>Attributes</h4>
+            {% for form in product_attribute_form %}
+                <fieldset class="product_attribute_form card mb-3">
+                    <div class="card-body">
+                        <div class="text-end mb-2">
+                            <button class="btn btn-danger"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        {{ form.as_p }}
+                    </div>
+                </fieldset>
+            {% endfor %}
+            <div>
+                <button class="btn btn-primary d-block w-100">Add Attribute <i class="fa-solid fa-circle-plus"></i>
+                </button>
+            </div>
+        </div>
+        <p><input type="submit" class="btn btn-success d-block w-100" value="Create"></p>
+    </form>
+
+    <script>
+
+        const addImageBtn = document.querySelector('#addImageBtn')
+        const imageContainer = document.querySelector('#imageContainer')
+        let imageFormCount = +document.querySelector('#id_images-TOTAL_FORMS').value
+
+        addImageBtn.addEventListener('click', e => {
+            imageFormCount++
+            imageContainer.innerHTML += `
+                <fieldset class="product_image_form card mb-3">
+                    <div class="card-body">
+                        <div class="text-end mb-2"><button class="btn btn-danger"><i class="fa-solid fa-xmark"></i></button></div>
+                            <p>
+                                <label for="id_images-${imageFormCount}-image">Изображение:</label>
+                                <input type="file" name="images-${imageFormCount}-image" class="form-control" accept="image/*" id="id_images-${imageFormCount}-image">
+                            </p>
+                            <p>
+                                <label for="id_images-${imageFormCount}-DELETE">Удалить:</label>
+                                <input type="checkbox" name="images-${imageFormCount}-DELETE" id="id_images-${imageFormCount}-DELETE">
+                                <input type="hidden" name="images-${imageFormCount}-product" id="id_images-${imageFormCount}-product">
+                                <input type="hidden" name="images-${imageFormCount}-id" id="id_images-${imageFormCount}-id">
+                            </p>
+                    </div>
+                </fieldset>
+            `
+        })
+
+
+    </script>
+
+{% endblock %}
