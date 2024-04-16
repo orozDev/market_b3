@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django_cleanup',
     'ckeditor_uploader',
     'ckeditor',
+    'rest_framework',
+    'django_filters',
 
     'core',
 ]
@@ -129,6 +131,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {}
 
 
 CKEDITOR_UPLOAD_PATH = 'uploads/'

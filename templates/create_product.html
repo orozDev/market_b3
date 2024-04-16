@@ -18,15 +18,21 @@
                             <div class="text-end mb-2">
                                 <button class="btn btn-danger"><i class="fa-solid fa-xmark"></i></button>
                             </div>
-                            {{ form.as_p }}
+                            <div>
+                                <label>{{ form.image.label }}</label>
+                                <div>{{ form.image }}</div>
+                            </div>
+
                         </div>
                     </fieldset>
                 {% endfor %}
             </div>
 
             <div>
-                <button type="button" class="btn btn-primary d-block w-100" id="addImageBtn">Add Image <i
-                        class="fa-solid fa-circle-plus"></i></button>
+                <button type="button" class="btn btn-primary d-block w-100" id="addImageBtn">
+                    Add Image
+                    <i class="fa-solid fa-circle-plus"></i>
+                </button>
             </div>
         </div>
         <div class="mb-4">
@@ -38,12 +44,21 @@
                         <div class="text-end mb-2">
                             <button class="btn btn-danger"><i class="fa-solid fa-xmark"></i></button>
                         </div>
-                        {{ form.as_p }}
+                        <div class="mb-3">
+                            <label>{{ form.name.label }}</label>
+                            <div>{{ form.name }}</div>
+                        </div>
+                          <div>
+                            <label>{{ form.value.label }}</label>
+                            <div>{{ form.value }}</div>
+                        </div>
                     </div>
                 </fieldset>
             {% endfor %}
             <div>
-                <button class="btn btn-primary d-block w-100">Add Attribute <i class="fa-solid fa-circle-plus"></i>
+                <button class="btn btn-primary d-block w-100">
+                    Add Attribute
+                    <i class="fa-solid fa-circle-plus"></i>
                 </button>
             </div>
         </div>
@@ -62,16 +77,12 @@
                 <fieldset class="product_image_form card mb-3">
                     <div class="card-body">
                         <div class="text-end mb-2"><button class="btn btn-danger"><i class="fa-solid fa-xmark"></i></button></div>
-                            <p>
-                                <label for="id_images-${imageFormCount}-image">Изображение:</label>
+                        <div>
+                            <label for="id_images-${imageFormCount}-image">Изображение:</label>
+                            <div>
                                 <input type="file" name="images-${imageFormCount}-image" class="form-control" accept="image/*" id="id_images-${imageFormCount}-image">
-                            </p>
-                            <p>
-                                <label for="id_images-${imageFormCount}-DELETE">Удалить:</label>
-                                <input type="checkbox" name="images-${imageFormCount}-DELETE" id="id_images-${imageFormCount}-DELETE">
-                                <input type="hidden" name="images-${imageFormCount}-product" id="id_images-${imageFormCount}-product">
-                                <input type="hidden" name="images-${imageFormCount}-id" id="id_images-${imageFormCount}-id">
-                            </p>
+                            </div>
+                        </div>
                     </div>
                 </fieldset>
             `
