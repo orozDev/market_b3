@@ -36,6 +36,15 @@ class Tag(TimeStampAbstractModel):
 
 
 class Product(TimeStampAbstractModel):
+    ORDER = 'order'
+    IN_STOCK = 'in_stock'
+    PICK_UP = 'pick_up'
+
+    RECEIVE_TYPE = (
+        (ORDER, 'На заказ'),
+        (IN_STOCK, 'В наличии'),
+        (PICK_UP, 'Самовывоз')
+    )
 
     class Meta:
         verbose_name = 'товар'
@@ -50,6 +59,7 @@ class Product(TimeStampAbstractModel):
     tags = models.ManyToManyField('core.Tag', verbose_name='теги')
     price = models.DecimalField('цена', max_digits=10, decimal_places=2, default=0.0)
     user = models.ForeignKey('auth.User', models.CASCADE, verbose_name='пользователь')
+    receive_type = models.CharField('условия получение', choices=RECEIVE_TYPE, default=ORDER, max_length=15)
     rating = models.PositiveIntegerField('рейтинг', validators=[MinValueValidator(1), MaxValueValidator(5)])
     is_published = models.BooleanField('публичность', default=True)
 
