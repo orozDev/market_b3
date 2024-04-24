@@ -80,7 +80,7 @@ class ProductImage(TimeStampAbstractModel):
         ordering = ('-created_at',)
 
     product = models.ForeignKey('core.Product', models.CASCADE, 'images', verbose_name='товар')
-    image = ResizedImageField('изображение', upload_to='product_images/', force_format='WEBP', quality=90)
+    image = models.ImageField('изображение', upload_to='product_images/')
 
     def __str__(self):
         return f'{self.product.name}'

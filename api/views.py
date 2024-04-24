@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
-from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer
+from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer
 from core.models import Category, Product
 
 
@@ -42,8 +42,14 @@ def detail_update_delete_category(request, id):
     return Response(serializer.data)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def list_products(request):
+    if request.method == 'POST':
+        serializer = CreateProductSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status.HTTP_201_CREATED)
+
     products = Product.objects.all()
     serializer = ListProductSerializer(products, many=True, context={'request': request})
     return Response(serializer.data)
