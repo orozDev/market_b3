@@ -59,6 +59,13 @@ class DetailProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProductSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Product
+        exclude = ('user',)
+
+
 class AttributeForCreateProductSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -93,3 +100,21 @@ class CreateProductSerializer(serializers.ModelSerializer):
 
         return product
 
+
+class ProductImageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductImage
+        fields = '__all__'
+
+
+class ProductAttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAttribute
+        fields = '__all__'
+
+
+class UpdateProductAttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAttribute
+        exclude = ('product',)

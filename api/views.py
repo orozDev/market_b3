@@ -1,11 +1,11 @@
-from pprint import pprint
-
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework import status
-from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer
-from core.models import Category, Product
+
+from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer, \
+    ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer
+from core.models import Category, Product, ProductImage, ProductAttribute
 
 
 @api_view(['GET', 'POST'])
@@ -56,7 +56,7 @@ def list_products(request):
     return Response(serializer.data)
 
 
-@api_view(['GET', 'DELETE'])
+@api_view(['GET', 'DELETE', 'PATCH'])
 def detail_product(request, id):
     product = get_object_or_404(Product, id=id)
 
@@ -64,5 +64,59 @@ def detail_product(request, id):
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    if request.method == 'PATCH':
+        serializer = ProductSerializer(instance=product, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        detail_serializer = DetailProductSerializer(instance=product, context={'request': request})
+        return Response(detail_serializer.data)
+
     serializer = DetailProductSerializer(instance=product, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def create_product_image(request):
+    serializer = ProductImageSerializer(data=request.data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data, status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'DELETE'])
+def detail_product_image(request, id):
+    product_image = get_object_or_404(ProductImage, id=id)
+
+    if request.method == 'DELETE':
+        product_image.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    serializer = ProductImageSerializer(instance=product_image, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def create_product_attribute(request):
+    serializer = ProductAttributeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data, status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'DELETE', 'PATCH'])
+def detail_product_attribute(request, id):
+    product_attribute = get_object_or_404(ProductAttribute, id=id)
+
+    if request.method == 'DELETE':
+        product_attribute.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    if request.method == 'PATCH':
+        serializer = UpdateProductAttributeSerializer(instance=product_attribute, data=request.data,
+                                                      partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    serializer = ProductAttributeSerializer(instance=product_attribute)
     return Response(serializer.data)
