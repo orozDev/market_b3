@@ -1,7 +1,8 @@
-from mimetypes import guess_extension
 import base64
 
-from django.core.files import File
+from django.db import transaction
+from drf_extra_fields.fields import Base64ImageField
+
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
@@ -67,16 +68,16 @@ class AttributeForCreateProductSerializer(serializers.ModelSerializer):
 
 class CreateProductSerializer(serializers.ModelSerializer):
     attributes = AttributeForProductSerializer(many=True)
-    images = serializers.ListSerializer(child=serializers.CharField(), required=False, allow_null=True)
+    images = serializers.ListSerializer(child=Base64ImageField(), required=False)
 
     class Meta:
         model = Product
         fields = '__all__'
 
+    @transaction.atomic()
     def create(self, validated_data):
         attributes = validated_data.pop('attributes', [])
         images = validated_data.pop('images', [])
-        name = validated_data.get('name', 'product_name')
 
         product = super().create(validated_data)
 
@@ -84,19 +85,11 @@ class CreateProductSerializer(serializers.ModelSerializer):
             ProductAttribute.objects.create(**attribute, product=product)
 
         for image in images:
-            idx = images.index(image)
-
-            format, imgstr = image.split(';base64,')
-            format_image = format.split('/')[-1]
-
-            image_file = base64.b64decode(image)
-            image_file = ContentFile(image_file)
-
-            image_name = f'{name}_{idx}.{format_image}'
-            print(image_name, image_file)
+            image_name = image.name
+            image_file = image
 
             product_image = ProductImage.objects.create(product=product)
-            product_image.image.save(image_name, image_file, save=True)
+            product_image.image.save(image_name, image_file)
 
         return product
 

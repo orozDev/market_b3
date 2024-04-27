@@ -47,8 +47,9 @@ def list_products(request):
     if request.method == 'POST':
         serializer = CreateProductSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status.HTTP_201_CREATED)
+        product = serializer.save()
+        detail_serializer = DetailProductSerializer(instance=product, context={'request': request})
+        return Response(detail_serializer.data, status.HTTP_201_CREATED)
 
     products = Product.objects.all()
     serializer = ListProductSerializer(products, many=True, context={'request': request})
