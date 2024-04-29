@@ -1,7 +1,9 @@
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from django.core.paginator import Paginator
 
 from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer, \
     ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer
@@ -18,8 +20,25 @@ def list_and_create_categories(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     categories = Category.objects.all()
+    search = request.GET.get('search')
+    if search:
+        categories = categories.filter(name__icontains=search)
+
+    qs_count = categories.count()
+
+    pagin = Paginator(categories, int(request.GET.get('page_size') or 12))
+    page = int(request.GET.get('page') or 1)
+    if 1 > page or page > pagin.num_pages:
+        return Response({'detail': f'Номер страницы не должно превыщать {pagin.num_pages}.'}, status.HTTP_400_BAD_REQUEST)
+    categories = pagin.get_page(page)
+
     serializer = CategorySerializer(categories, many=True)
-    return Response(serializer.data)
+
+    return Response({
+        'count': qs_count,
+        'page_count': pagin.num_pages,
+        'results': serializer.data
+    })
 
 
 @api_view(['GET', 'PATCH', 'PUT', 'DELETE'])
@@ -52,8 +71,26 @@ def list_products(request):
         return Response(detail_serializer.data, status.HTTP_201_CREATED)
 
     products = Product.objects.all()
+    search = request.GET.get('search')
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) | Q(description__icontains=search) | Q(content__icontains=search))
+
+    qs_count = products.count()
+
+    pagin = Paginator(products, int(request.GET.get('page_size') or 12))
+    page = int(request.GET.get('page') or 1)
+    if 1 > page or page > pagin.num_pages:
+        return Response({'detail': f'Номер страницы не должно превыщать {pagin.num_pages}.'},
+                        status.HTTP_400_BAD_REQUEST)
+    products = pagin.get_page(page)
+
     serializer = ListProductSerializer(products, many=True, context={'request': request})
-    return Response(serializer.data)
+    return Response({
+        'count': qs_count,
+        'page_count': pagin.num_pages,
+        'results': serializer.data
+    })
 
 
 @api_view(['GET', 'DELETE', 'PATCH'])
