@@ -5,6 +5,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from django.core.paginator import Paginator
 
+from api.filters import ProductFilter
 from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer, \
     ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer
 from core.models import Category, Product, ProductImage, ProductAttribute
@@ -71,14 +72,24 @@ def list_products(request):
         return Response(detail_serializer.data, status.HTTP_201_CREATED)
 
     products = Product.objects.all()
+
+    ordering = request.GET.get('ordering', '')
+    order_fields = ['created_at', 'price']
+
+    if ordering.replace('-', '') in order_fields:
+        products = products.order_by(ordering)
+
     search = request.GET.get('search')
     if search:
         products = products.filter(
             Q(name__icontains=search) | Q(description__icontains=search) | Q(content__icontains=search))
 
+    filterset = ProductFilter(queryset=products, data=request.GET)
+    products = filterset.qs
+
     qs_count = products.count()
 
-    pagin = Paginator(products, int(request.GET.get('page_size') or 12))
+    pagin = Paginator(products, int(request.GET.get('page_size') or 50))
     page = int(request.GET.get('page') or 1)
     if 1 > page or page > pagin.num_pages:
         return Response({'detail': f'Номер страницы не должно превыщать {pagin.num_pages}.'},
