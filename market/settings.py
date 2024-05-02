@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
 
+
+    'account',
     'core',
 ]
 
@@ -133,6 +135,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {}
+
+AUTH_USER_MODEL = 'account.User'
 
 
 CKEDITOR_UPLOAD_PATH = 'uploads/'
