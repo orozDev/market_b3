@@ -1,13 +1,18 @@
 from django.db.models import Q
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from django.core.paginator import Paginator
+from django.contrib.auth import authenticate
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 
 from api.filters import ProductFilter
 from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer, \
-    ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer
+    ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer, \
+    LoginSerializer, UserSerializer
 from core.models import Category, Product, ProductImage, ProductAttribute
 
 
@@ -63,6 +68,7 @@ def detail_update_delete_category(request, id):
 
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def list_products(request):
     if request.method == 'POST':
         serializer = CreateProductSerializer(data=request.data, context={'request': request})
@@ -168,3 +174,20 @@ def detail_product_attribute(request, id):
 
     serializer = ProductAttributeSerializer(instance=product_attribute)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def login_api(request):
+    serializer = LoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data.get('email')
+    password = serializer.validated_data.get('password')
+    user = authenticate(email=email, password=password)
+    if user:
+        token, created = Token.objects.get_or_create(user=user)
+        user_serializer = UserSerializer(user, context={'request': request})
+        return Response({
+            **user_serializer.data,
+            'token': token.key
+        })
+    return Response({'detail': 'Не существуеет пользователя либо неверный пароль.'}, status.HTTP_400_BAD_REQUEST)

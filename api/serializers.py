@@ -6,6 +6,7 @@ from drf_extra_fields.fields import Base64ImageField
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
+from account.models import User
 from core.models import Category, Tag, Product, ProductImage, ProductAttribute
 
 
@@ -118,3 +119,16 @@ class UpdateProductAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductAttribute
         exclude = ('product',)
+
+
+class LoginSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        exclude = ('is_staff', 'is_active', 'password', 'is_superuser', 'groups', 'user_permissions')
