@@ -7,16 +7,18 @@ from rest_framework.response import Response
 from django.core.paginator import Paginator
 from django.contrib.auth import authenticate
 from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, IsAuthenticatedOrReadOnly
 
 from api.filters import ProductFilter
+from api.permissions import IsSalesmanOrReadOnly, IsAdminUserOrReadOnly, IsSalesman
 from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer, \
     ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer, \
-    LoginSerializer, UserSerializer
+    LoginSerializer, UserSerializer, RegisterSerializer
 from core.models import Category, Product, ProductImage, ProductAttribute
 
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAdminUserOrReadOnly])
 def list_and_create_categories(request):
     if request.method == 'POST':
         serializer = CategorySerializer(data=request.data)
@@ -48,6 +50,7 @@ def list_and_create_categories(request):
 
 
 @api_view(['GET', 'PATCH', 'PUT', 'DELETE'])
+@permission_classes([IsAdminUserOrReadOnly])
 def detail_update_delete_category(request, id):
     category = get_object_or_404(Category, id=id)
 
@@ -68,7 +71,7 @@ def detail_update_delete_category(request, id):
 
 
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly])
 def list_products(request):
     if request.method == 'POST':
         serializer = CreateProductSerializer(data=request.data, context={'request': request})
@@ -111,6 +114,7 @@ def list_products(request):
 
 
 @api_view(['GET', 'DELETE', 'PATCH'])
+@permission_classes([IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly])
 def detail_product(request, id):
     product = get_object_or_404(Product, id=id)
 
@@ -130,6 +134,7 @@ def detail_product(request, id):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated, IsSalesman])
 def create_product_image(request):
     serializer = ProductImageSerializer(data=request.data, context={'request': request})
     serializer.is_valid(raise_exception=True)
@@ -191,3 +196,16 @@ def login_api(request):
             'token': token.key
         })
     return Response({'detail': 'Не существуеет пользователя либо неверный пароль.'}, status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def register_api(request):
+    serializer = RegisterSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.save()
+    token, created = Token.objects.get_or_create(user=user)
+    user_serializer = UserSerializer(user, context={'request': request})
+    return Response({
+        **user_serializer.data,
+        'token': token.key
+    })

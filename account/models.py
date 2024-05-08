@@ -8,6 +8,16 @@ from account.managers import UserManager
 
 
 class User(AbstractUser):
+    CLIENT = 'client'
+    SALESMAN = 'salesman'
+    ADMIN = 'admin'
+
+    ROLE = (
+        (CLIENT, 'Покупатель'),
+        (SALESMAN, 'Продавец'),
+        (ADMIN, 'Администратор')
+    )
+
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'пользователи'
@@ -19,6 +29,7 @@ class User(AbstractUser):
                                null=True, blank=True)
     phone = PhoneNumberField(max_length=100, unique=True, verbose_name='номер телефона')
     email = models.EmailField(blank=True, verbose_name='электронная почта', unique=True)
+    role = models.CharField('роль', choices=ROLE, default=CLIENT, max_length=15)
 
     objects = UserManager()
 

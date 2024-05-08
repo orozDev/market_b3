@@ -14,6 +14,7 @@ urlpatterns = [
     path('products-images/<int:id>/', views.detail_product_image),
     path('products-images/', views.create_product_image),
 
-    path('auth/login/', views.login_api)
+    path('auth/login/', views.login_api),
+    path('auth/register/', views.register_api),
 
 ]

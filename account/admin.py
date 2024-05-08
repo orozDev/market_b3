@@ -12,6 +12,7 @@ class UserAdmin(BaseUserAdmin):
         'email',
         'phone',
         'get_full_name',
+        'role',
         'get_avatar',
     )
     list_display_links = ('id', 'email',)
@@ -32,6 +33,7 @@ class UserAdmin(BaseUserAdmin):
             'last_name',
         )}),
         (_('Permissions'), {'fields': (
+            'role',
             'is_active',
             'is_staff',
             'is_superuser',

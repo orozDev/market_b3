@@ -8,6 +8,8 @@ from rest_framework import serializers
 
 from account.models import User
 from core.models import Category, Tag, Product, ProductImage, ProductAttribute
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.hashers import make_password
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -132,3 +134,30 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ('is_staff', 'is_active', 'password', 'is_superuser', 'groups', 'user_permissions')
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+
+    password1 = serializers.CharField(validators=[validate_password])
+    password2 = serializers.CharField()
+
+    class Meta:
+        model = User
+        exclude = ('is_staff', 'is_active', 'password', 'is_superuser', 'groups', 'user_permissions')
+
+    def validate(self, attrs):
+        password1 = attrs.get('password1')
+        password2 = attrs.get('password2')
+
+        if password1 != password2:
+            raise serializers.ValidationError({
+                'password2': ['Пароли не совпадают!']
+            })
+
+        return attrs
+
+    def create(self, validated_data):
+        password = validated_data.pop('password1')
+        validated_data.pop('password2')
+        validated_data['password'] = make_password(password)
+        return super().create(validated_data)
