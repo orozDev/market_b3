@@ -143,7 +143,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        exclude = ('is_staff', 'is_active', 'password', 'is_superuser', 'groups', 'user_permissions')
+        exclude = ('is_staff', 'is_active', 'password', 'is_superuser', 'groups', 'user_permissions', 'phone')
 
     def validate(self, attrs):
         password1 = attrs.get('password1')
