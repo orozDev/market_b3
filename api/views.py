@@ -1,5 +1,6 @@
 from django.db.models import Q
-from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, filters
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
@@ -7,67 +8,35 @@ from rest_framework.response import Response
 from django.core.paginator import Paginator
 from django.contrib.auth import authenticate
 from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 
 from api.filters import ProductFilter
+from api.paginations import MediumPagination
 from api.permissions import IsSalesmanOrReadOnly, IsAdminUserOrReadOnly, IsSalesman
 from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer, \
     ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer, \
     LoginSerializer, UserSerializer, RegisterSerializer
 from core.models import Category, Product, ProductImage, ProductAttribute
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAdminUserOrReadOnly])
-def list_and_create_categories(request):
-    if request.method == 'POST':
-        serializer = CategorySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    categories = Category.objects.all()
-    search = request.GET.get('search')
-    if search:
-        categories = categories.filter(name__icontains=search)
-
-    qs_count = categories.count()
-
-    pagin = Paginator(categories, int(request.GET.get('page_size') or 12))
-    page = int(request.GET.get('page') or 1)
-    if 1 > page or page > pagin.num_pages:
-        return Response({'detail': f'Номер страницы не должно превыщать {pagin.num_pages}.'}, status.HTTP_400_BAD_REQUEST)
-    categories = pagin.get_page(page)
-
-    serializer = CategorySerializer(categories, many=True)
-
-    return Response({
-        'count': qs_count,
-        'page_count': pagin.num_pages,
-        'results': serializer.data
-    })
+class CategoryListAPIView(ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (AllowAny,)
+    pagination_class = MediumPagination
+    filter_backends = [DjangoFilterBackend,
+                       filters.OrderingFilter,
+                       filters.SearchFilter]
+    search_fields = ('name',)
+    ordering = ('id', 'name', 'created_at')
 
 
-@api_view(['GET', 'PATCH', 'PUT', 'DELETE'])
-@permission_classes([IsAdminUserOrReadOnly])
-def detail_update_delete_category(request, id):
-    category = get_object_or_404(Category, id=id)
-
-    if request.method == 'PUT' or request.method == 'PATCH':
-        partial = request.method == 'PATCH'
-        serializer = CategorySerializer(instance=category, data=request.data, partial=partial)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    if request.method == 'DELETE':
-        category.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    serializer = CategorySerializer(category)
-    return Response(serializer.data)
+class CategoryRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsAdminUserOrReadOnly,)
+    lookup_field = 'id'
 
 
 @api_view(['GET', 'POST'])
