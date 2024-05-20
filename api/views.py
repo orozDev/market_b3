@@ -12,18 +12,19 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 
 from api.filters import ProductFilter
 from api.paginations import MediumPagination
-from api.permissions import IsSalesmanOrReadOnly, IsAdminUserOrReadOnly, IsSalesman
+from api.permissions import IsOwnerProductOrReadOnly, IsSalesmanOrReadOnly, IsAdminUserOrReadOnly, IsSalesman
 from api.serializers import CategorySerializer, ListProductSerializer, DetailProductSerializer, CreateProductSerializer, \
     ProductImageSerializer, ProductAttributeSerializer, ProductSerializer, UpdateProductAttributeSerializer, \
     LoginSerializer, UserSerializer, RegisterSerializer
 from core.models import Category, Product, ProductImage, ProductAttribute
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, RetrieveDestroyAPIView, CreateAPIView
+from rest_framework.viewsets import ModelViewSet
 
 
 class CategoryListAPIView(ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminUserOrReadOnly)
     pagination_class = MediumPagination
     filter_backends = [DjangoFilterBackend,
                        filters.OrderingFilter,
@@ -35,66 +36,49 @@ class CategoryListAPIView(ListCreateAPIView):
 class CategoryRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminUserOrReadOnly)
     lookup_field = 'id'
 
 
-class ListProduct(GenericAPIView):
+class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
-    serializer_class = ListProductSerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
+    serializer_class = {
+        'list': ListProductSerializer,
+        'retrieve': DetailProductSerializer,
+        'create': CreateProductSerializer,
+        'update': ProductSerializer,
+    }
+    lookup_field = 'id'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ('name',)
     filterset_class = ProductFilter
-    ordering = ('id', 'category', 'rating')
-    pagination_class = MediumPagination 
+    pagination_class = MediumPagination
+    permission_classes = (IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly, IsOwnerProductOrReadOnly)
 
-    def post(self, request, *args, **kwargs):
-        serializer = CreateProductSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        product = serializer.save()
-        detail_serializer = DetailProductSerializer(instance=product, context={'request': request})
-        return Response(detail_serializer.data, status.HTTP_201_CREATED)
-
-    def get(self, request, *args, **kwargs):
-        products = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(products)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(products, many=True, context={'request': request})
-        return Response(serializer.data)
+    def get_serializer_class(self):
+        if self.action == 'partial_update':
+            return self.serializer_class['update']
+        return self.serializer_class[self.action] 
 
 
-
-@permission_classes([IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly])
-class ProductRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
-    lookup_field = 'id'
-
-
-
-@permission_classes([IsAuthenticated, IsSalesman])
 class CreateProductImage(CreateAPIView):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly)
     
 
 class DetailProductImage(RetrieveDestroyAPIView):
     queryset = ProductImage
     lookup_field = 'id'
     serializer_class = ProductImageSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAdminUserOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly, IsOwnerProductOrReadOnly)
 
 
 
 class CreateProductAttribute(ListCreateAPIView):
     queryset = ProductAttribute.objects.all()
     serializer_class = ProductAttributeSerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly)
 
 
 class DetailProductAttribute(GenericAPIView):
@@ -102,6 +86,7 @@ class DetailProductAttribute(GenericAPIView):
     queryset = ProductAttribute.objects.all()
     serializer_class = ProductAttributeSerializer
     lookup_field = 'id'
+    pagination_class = (IsAuthenticatedOrReadOnly, IsSalesmanOrReadOnly, IsOwnerProductOrReadOnly)
 
     def delete(self, request, *args, **kwargs):
         product_attribute = self.get_object()
