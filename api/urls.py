@@ -5,16 +5,16 @@ urlpatterns = [
     path('categories/', views.CategoryListAPIView.as_view()),
     path('categories/<int:id>', views.CategoryRetrieveUpdateDestroyAPIView.as_view()),
 
-    path('products/', views.list_products),
-    path('products/<int:id>/', views.detail_product),
+    path('products/', views.ListProduct.as_view()),
+    path('products/<int:id>/', views.ProductRetrieveUpdateDestroyAPIView.as_view()),
 
-    path('products-attributes/<int:id>/', views.detail_product_attribute),
-    path('products-attributes/', views.create_product_attribute),
+    path('products-attributes/<int:id>/', views.DetailProductAttribute.as_view()),
+    path('products-attributes/', views.CreateProductAttribute.as_view()),
 
-    path('products-images/<int:id>/', views.detail_product_image),
-    path('products-images/', views.create_product_image),
+    path('products-images/<int:id>/', views.DetailProductImage.as_view()),
+    path('products-images/', views.CreateProductImage.as_view()),
 
-    path('auth/login/', views.login_api),
-    path('auth/register/', views.register_api),
+    path('auth/login/', views.LoginApiView.as_view()),
+    path('auth/register/', views.RegisterApiView.as_view()),
 
 ]

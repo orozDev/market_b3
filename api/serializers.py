@@ -135,6 +135,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         exclude = ('is_staff', 'is_active', 'password', 'is_superuser', 'groups', 'user_permissions')
 
+    def to_representation(self, instance):
+        # instance in self.context['request'].user.favorite_products.all()
+        ret = super().to_representation(instance)
+        ret['is_admin'] = instance.is_superuser 
+        return ret
+
 
 class RegisterSerializer(serializers.ModelSerializer):
 
